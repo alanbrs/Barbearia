@@ -4,20 +4,33 @@ import { Appointment } from '../types';
 
 let supabaseInstance: SupabaseClient | null = null;
 
+const getEnvSafe = (key: string): string => {
+  try {
+    return (
+      (window as any).process?.env?.[key] || 
+      (typeof process !== 'undefined' ? process.env[key] : '') ||
+      ''
+    );
+  } catch {
+    return '';
+  }
+};
+
 const getSupabase = (): SupabaseClient | null => {
   if (supabaseInstance) return supabaseInstance;
 
-  try {
-    const env = (window as any).process?.env || {};
-    const url = env.SUPABASE_URL || '';
-    const key = env.SUPABASE_ANON_KEY || '';
+  const url = getEnvSafe('SUPABASE_URL');
+  const key = getEnvSafe('SUPABASE_ANON_KEY');
 
-    if (url && key && url.startsWith('http')) {
+  if (url && key && url.startsWith('http')) {
+    try {
       supabaseInstance = createClient(url, key);
       return supabaseInstance;
+    } catch (e) {
+      console.error("Erro Supabase Init:", e);
     }
-  } catch (e) {
-    console.error("Erro ao inicializar Supabase:", e);
+  } else {
+    console.warn("Variáveis de ambiente do Supabase não encontradas ou inválidas.");
   }
   
   return null;
@@ -26,10 +39,7 @@ const getSupabase = (): SupabaseClient | null => {
 export const storageService = {
   async getAppointments(): Promise<Appointment[]> {
     const supabase = getSupabase();
-    if (!supabase) {
-      console.warn("Supabase não configurado.");
-      return [];
-    }
+    if (!supabase) return [];
 
     try {
       const { data, error } = await supabase
@@ -50,16 +60,14 @@ export const storageService = {
         createdAt: new Date(item.created_at).getTime()
       }));
     } catch (err) {
-      console.error("Erro ao buscar agendamentos:", err);
+      console.error("storageService.getAppointments:", err);
       return [];
     }
   },
 
   async saveAppointment(appointment: Omit<Appointment, 'id' | 'createdAt' | 'status'>): Promise<void> {
     const supabase = getSupabase();
-    if (!supabase) {
-      throw new Error("Banco de dados não disponível.");
-    }
+    if (!supabase) throw new Error("Banco de dados não disponível.");
 
     const { error } = await supabase
       .from('appointments')
