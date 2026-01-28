@@ -2,35 +2,34 @@
 import { createClient, SupabaseClient } from '@supabase/supabase-js';
 import { Appointment } from '../types';
 
-// Proteção global para o objeto process no navegador
-const safeProcess = (typeof process !== 'undefined' ? process : (window as any).process) || { env: {} };
+let supabaseInstance: SupabaseClient | null = null;
 
-const getEnvSafe = (key: string): string => {
+const getSupabase = (): SupabaseClient | null => {
+  if (supabaseInstance) return supabaseInstance;
+
   try {
-    return safeProcess.env?.[key] || '';
+    const env = (window as any).process?.env || {};
+    const url = env.SUPABASE_URL || '';
+    const key = env.SUPABASE_ANON_KEY || '';
+
+    if (url && key && url.startsWith('http')) {
+      supabaseInstance = createClient(url, key);
+      return supabaseInstance;
+    }
   } catch (e) {
-    return '';
+    console.error("Erro ao inicializar Supabase:", e);
   }
+  
+  return null;
 };
-
-const supabaseUrl = getEnvSafe('SUPABASE_URL');
-const supabaseAnonKey = getEnvSafe('SUPABASE_ANON_KEY');
-
-let supabase: SupabaseClient | null = null;
-
-if (supabaseUrl && supabaseAnonKey && supabaseUrl !== '' && supabaseAnonKey !== '') {
-  try {
-    supabase = createClient(supabaseUrl, supabaseAnonKey);
-  } catch (err) {
-    console.error("Erro crítico ao inicializar Supabase:", err);
-  }
-} else {
-  console.warn("Supabase não configurado: Verifique as variáveis de ambiente SUPABASE_URL e SUPABASE_ANON_KEY no painel da Vercel.");
-}
 
 export const storageService = {
   async getAppointments(): Promise<Appointment[]> {
-    if (!supabase) return [];
+    const supabase = getSupabase();
+    if (!supabase) {
+      console.warn("Supabase não configurado.");
+      return [];
+    }
 
     try {
       const { data, error } = await supabase
@@ -51,15 +50,15 @@ export const storageService = {
         createdAt: new Date(item.created_at).getTime()
       }));
     } catch (err) {
-      console.error("Falha ao buscar agendamentos:", err);
+      console.error("Erro ao buscar agendamentos:", err);
       return [];
     }
   },
 
   async saveAppointment(appointment: Omit<Appointment, 'id' | 'createdAt' | 'status'>): Promise<void> {
+    const supabase = getSupabase();
     if (!supabase) {
-      alert("Configuração do banco de dados ausente. Verifique o painel da Vercel.");
-      return;
+      throw new Error("Banco de dados não disponível.");
     }
 
     const { error } = await supabase
@@ -79,6 +78,7 @@ export const storageService = {
   },
 
   async updateAppointmentStatus(id: string, status: Appointment['status']): Promise<void> {
+    const supabase = getSupabase();
     if (!supabase) return;
 
     const { error } = await supabase
