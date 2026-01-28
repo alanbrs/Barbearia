@@ -8,6 +8,7 @@ let supabaseInstance: SupabaseClient | null = null;
 
 const getEnvSafe = (key: string): string => {
   try {
+    // Busca em múltiplas fontes para garantir compatibilidade com Vite/Vercel
     return (
       (window as any).process?.env?.[key] || 
       (typeof process !== 'undefined' ? process.env[key] : '') ||
@@ -29,16 +30,19 @@ const getSupabase = (): SupabaseClient | null => {
       supabaseInstance = createClient(url, key);
       return supabaseInstance;
     } catch (e) {
-      console.error("Erro ao conectar com Supabase:", e);
+      console.error("Erro ao inicializar Supabase:", e);
     }
   }
   return null;
 };
 
-// Métodos auxiliares para LocalStorage
 const getLocalAppointments = (): Appointment[] => {
-  const data = localStorage.getItem(LOCAL_STORAGE_KEY);
-  return data ? JSON.parse(data) : [];
+  try {
+    const data = localStorage.getItem(LOCAL_STORAGE_KEY);
+    return data ? JSON.parse(data) : [];
+  } catch {
+    return [];
+  }
 };
 
 const saveLocalAppointment = (appointment: Appointment) => {
@@ -56,6 +60,7 @@ export const storageService = {
         const { data, error } = await supabase
           .from('appointments')
           .select('*')
+          .order('date', { ascending: true })
           .order('time', { ascending: true });
 
         if (!error && data) {
@@ -70,8 +75,9 @@ export const storageService = {
             createdAt: new Date(item.created_at || Date.now()).getTime()
           }));
         }
+        if (error) console.warn("Supabase retornou erro:", error.message);
       } catch (err) {
-        console.warn("Supabase falhou, usando dados locais.");
+        console.warn("Falha de conexão com Supabase.");
       }
     }
     
@@ -80,15 +86,8 @@ export const storageService = {
 
   async saveAppointment(appointment: Omit<Appointment, 'id' | 'createdAt' | 'status'>): Promise<void> {
     const supabase = getSupabase();
-    const newId = Math.random().toString(36).substr(2, 9);
+    const tempId = Math.random().toString(36).substr(2, 9);
     const timestamp = Date.now();
-
-    const newAppointment: Appointment = {
-      ...appointment,
-      id: newId,
-      createdAt: timestamp,
-      status: 'pending'
-    };
 
     if (supabase) {
       try {
@@ -106,15 +105,19 @@ export const storageService = {
           ]);
 
         if (!error) return;
-        console.error("Erro no insert do Supabase:", error);
+        console.error("Erro ao salvar no Supabase:", error.message);
       } catch (err) {
-        console.error("Falha na conexão com Supabase ao salvar.");
+        console.error("Falha crítica ao tentar salvar no Supabase.");
       }
     }
 
-    // Se chegar aqui, salva localmente como fallback
-    saveLocalAppointment(newAppointment);
-    console.info("Agendamento salvo localmente (Modo Offline/Fallback).");
+    // Fallback LocalStorage
+    saveLocalAppointment({
+      ...appointment,
+      id: tempId,
+      createdAt: timestamp,
+      status: 'pending'
+    });
   },
 
   async updateAppointmentStatus(id: string, status: Appointment['status']): Promise<void> {
@@ -129,11 +132,10 @@ export const storageService = {
         
         if (!error) return;
       } catch (err) {
-        console.error("Erro ao atualizar no Supabase.");
+        console.error("Erro de rede ao atualizar status.");
       }
     }
 
-    // Atualização local
     const apps = getLocalAppointments();
     const updated = apps.map(app => app.id === id ? { ...app, status } : app);
     localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(updated));
