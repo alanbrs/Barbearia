@@ -3,11 +3,12 @@ import { GoogleGenAI } from "@google/genai";
 
 export const getBarberInsights = async (appointmentCount: number) => {
   try {
-    // Acessa o process.env de forma segura dentro da função
-    const apiKey = (typeof process !== 'undefined' && process.env.API_KEY) ? process.env.API_KEY : '';
+    // Acesso seguro ao process.env
+    const safeProcess = (typeof process !== 'undefined' ? process : (window as any).process) || { env: {} };
+    const apiKey = safeProcess.env?.API_KEY || '';
     
     if (!apiKey) {
-      return "A arte de barbear é o toque final na confiança de um homem. Tenha um ótimo dia!";
+      return "Um bom corte começa com uma boa conversa. Tenha um excelente dia de trabalho!";
     }
 
     const ai = new GoogleGenAI({ apiKey });
@@ -21,7 +22,7 @@ export const getBarberInsights = async (appointmentCount: number) => {
     });
     return response.text;
   } catch (error) {
-    console.error("Gemini Error:", error);
-    return "Excelência não é um ato, mas um hábito. Transforme cada corte em uma obra de arte.";
+    console.warn("Dica do Mestre temporariamente indisponível.");
+    return "A excelência está nos detalhes. Transforme cada atendimento em uma experiência única.";
   }
 };
