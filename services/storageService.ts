@@ -1,52 +1,88 @@
 
+import { createClient, SupabaseClient } from '@supabase/supabase-js';
 import { Appointment } from '../types';
 
-const STORAGE_KEY = 'barber_flow_appointments';
+// Função utilitária para acessar env sem quebrar o browser
+const getEnvSafe = (key: string): string => {
+  try {
+    if (typeof process !== 'undefined' && process.env) {
+      return (process.env as any)[key] || '';
+    }
+  } catch (e) {
+    console.warn(`Erro ao acessar a variável ${key}:`, e);
+  }
+  return '';
+};
 
-// Simula o atraso de uma rede real para você testar a UX
-const delay = (ms: number) => new Promise(res => setTimeout(res, ms));
+const supabaseUrl = getEnvSafe('SUPABASE_URL');
+const supabaseAnonKey = getEnvSafe('SUPABASE_ANON_KEY');
+
+let supabase: SupabaseClient | null = null;
+
+if (supabaseUrl && supabaseAnonKey) {
+  try {
+    supabase = createClient(supabaseUrl, supabaseAnonKey);
+  } catch (err) {
+    console.error("Erro ao inicializar Supabase:", err);
+  }
+}
 
 export const storageService = {
-  /**
-   * Busca todos os agendamentos.
-   * Em um cenário real, aqui você faria: 
-   * const { data } = await supabase.from('appointments').select('*')
-   */
   async getAppointments(): Promise<Appointment[]> {
-    await delay(600); // Simula latência de rede
-    const saved = localStorage.getItem(STORAGE_KEY);
-    return saved ? JSON.parse(saved) : [];
+    if (!supabase) {
+      console.warn("Banco de dados não configurado no Vercel. Use variáveis de ambiente.");
+      return [];
+    }
+
+    const { data, error } = await supabase
+      .from('appointments')
+      .select('*')
+      .order('time', { ascending: true });
+
+    if (error) {
+      console.error("Erro na busca de dados:", error);
+      return [];
+    }
+
+    return (data || []).map((item: any) => ({
+      id: item.id,
+      clientName: item.client_name,
+      clientPhone: item.client_phone,
+      service: item.service,
+      date: item.date,
+      time: item.time,
+      status: item.status,
+      createdAt: new Date(item.created_at).getTime()
+    }));
   },
 
-  /**
-   * Salva um novo agendamento.
-   */
-  async saveAppointment(appointment: Appointment): Promise<void> {
-    await delay(800);
-    const appointments = await this.getAppointments();
-    const updated = [...appointments, appointment];
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(updated));
+  async saveAppointment(appointment: Omit<Appointment, 'id' | 'createdAt' | 'status'>): Promise<void> {
+    if (!supabase) throw new Error("Banco de dados não configurado.");
+
+    const { error } = await supabase
+      .from('appointments')
+      .insert([
+        {
+          client_name: appointment.clientName,
+          client_phone: appointment.clientPhone,
+          service: appointment.service,
+          date: appointment.date,
+          time: appointment.time,
+          status: 'pending'
+        }
+      ]);
+
+    if (error) throw error;
   },
 
-  /**
-   * Atualiza o status de um agendamento existente.
-   */
   async updateAppointmentStatus(id: string, status: Appointment['status']): Promise<void> {
-    await delay(500);
-    const appointments = await this.getAppointments();
-    const updated = appointments.map(app => 
-      app.id === id ? { ...app, status } : app
-    );
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(updated));
-  },
+    if (!supabase) throw new Error("Banco de dados não configurado.");
 
-  /**
-   * Limpa dados antigos (opcional)
-   */
-  async clearOldAppointments(): Promise<void> {
-    const appointments = await this.getAppointments();
-    const today = new Date().toISOString().split('T')[0];
-    const filtered = appointments.filter(app => app.date >= today);
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(filtered));
+    const { error } = await supabase
+      .from('appointments')
+      .update({ status })
+      .eq('id', id);
+
+    if (error) throw error;
   }
 };

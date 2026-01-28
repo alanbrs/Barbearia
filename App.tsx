@@ -13,7 +13,6 @@ const App: React.FC = () => {
   const [appointments, setAppointments] = useState<Appointment[]>([]);
   const [isLoading, setIsLoading] = useState(true);
 
-  // Carrega os dados do "Banco de Dados"
   const loadData = async () => {
     setIsLoading(true);
     try {
@@ -28,37 +27,30 @@ const App: React.FC = () => {
 
   useEffect(() => {
     loadData();
+    // Opcional: Polling simples para atualizar a agenda a cada 30 segundos
+    const interval = setInterval(loadData, 30000);
+    return () => clearInterval(interval);
   }, []);
 
   const handleBook = async (data: Omit<Appointment, 'id' | 'createdAt' | 'status'>) => {
-    const newApp: Appointment = {
-      ...data,
-      id: Math.random().toString(36).substr(2, 9),
-      status: 'pending',
-      createdAt: Date.now()
-    };
-    
-    // Adiciona localmente para feedback instantâneo
-    setAppointments(prev => [...prev, newApp]);
-    
-    // Salva no "Banco"
+    setIsLoading(true);
     try {
-      await storageService.saveAppointment(newApp);
+      await storageService.saveAppointment(data);
+      await loadData(); // Recarrega para obter o ID gerado pelo banco
     } catch (error) {
-      alert("Erro ao salvar agendamento. Tente novamente.");
-      loadData(); // Reverte para o estado do banco
+      alert("Erro ao salvar agendamento. Verifique sua conexão.");
+      console.error(error);
+    } finally {
+      setIsLoading(false);
     }
   };
 
   const updateStatus = async (id: string, status: Appointment['status']) => {
-    // Atualiza localmente
-    setAppointments(prev => prev.map(app => 
-      app.id === id ? { ...app, status } : app
-    ));
-
-    // Salva no "Banco"
     try {
       await storageService.updateAppointmentStatus(id, status);
+      setAppointments(prev => prev.map(app => 
+        app.id === id ? { ...app, status } : app
+      ));
     } catch (error) {
       console.error("Erro ao atualizar status:", error);
       loadData();
@@ -71,7 +63,6 @@ const App: React.FC = () => {
     } else {
       setRole(newRole);
       setShowAuthScreen(false);
-      // Sempre que o barbeiro entrar, atualizamos os dados para ver novos agendamentos
       if (newRole === 'barber') loadData();
     }
   };
@@ -82,7 +73,7 @@ const App: React.FC = () => {
         <div className="fixed inset-0 z-[100] bg-slate-900/60 backdrop-blur-sm flex items-center justify-center">
           <div className="flex flex-col items-center gap-3">
             <div className="w-10 h-10 border-4 border-amber-500 border-t-transparent rounded-full animate-spin"></div>
-            <p className="text-amber-500 font-bold text-xs uppercase tracking-widest">Sincronizando...</p>
+            <p className="text-amber-500 font-bold text-xs uppercase tracking-widest">Sincronizando Banco de Dados...</p>
           </div>
         </div>
       )}
@@ -102,7 +93,6 @@ const App: React.FC = () => {
         />
       )}
 
-      {/* Navigation Top */}
       <nav className="bg-slate-800/80 backdrop-blur-md sticky top-0 z-50 border-b border-slate-700 px-4 py-3 flex justify-between items-center">
         <div className="flex items-center gap-2">
           <div className="w-10 h-10 bg-amber-500 rounded-lg flex items-center justify-center">
@@ -137,7 +127,6 @@ const App: React.FC = () => {
         )}
       </main>
 
-      {/* Navigation Mobile */}
       <div className="fixed bottom-0 left-0 right-0 bg-slate-800/90 backdrop-blur-md border-t border-slate-700 py-3 px-6 flex justify-around items-center md:hidden z-40">
         <button 
           className={`flex flex-col items-center gap-1 ${role === 'client' && !showAuthScreen ? 'text-amber-500' : 'text-slate-500'}`} 
