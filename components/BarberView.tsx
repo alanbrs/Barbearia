@@ -2,7 +2,6 @@
 import React, { useState, useEffect } from 'react';
 import { Appointment } from '../types';
 import { getBarberInsights } from '../services/geminiService';
-import { Button } from './Button';
 
 interface BarberViewProps {
   appointments: Appointment[];
@@ -10,7 +9,7 @@ interface BarberViewProps {
 }
 
 export const BarberView: React.FC<BarberViewProps> = ({ appointments, onUpdateStatus }) => {
-  const [insight, setInsight] = useState<string>('Carregando dicas do mestre...');
+  const [insight, setInsight] = useState<string>('Refinando o atendimento...');
   const [filterDate, setFilterDate] = useState<string>(new Date().toISOString().split('T')[0]);
 
   useEffect(() => {
@@ -18,7 +17,7 @@ export const BarberView: React.FC<BarberViewProps> = ({ appointments, onUpdateSt
       const today = new Date().toISOString().split('T')[0];
       const todayCount = appointments.filter(a => a.date === today && a.status !== 'canceled').length;
       const result = await getBarberInsights(todayCount);
-      setInsight(result || "Qualidade é o nosso foco.");
+      setInsight(result || "A excelência está nos detalhes.");
     };
     fetchInsight();
   }, [appointments.length]);
@@ -28,97 +27,97 @@ export const BarberView: React.FC<BarberViewProps> = ({ appointments, onUpdateSt
     .sort((a, b) => a.time.localeCompare(b.time));
 
   return (
-    <div className="max-w-4xl mx-auto p-4 pb-24">
-      <header className="mb-8">
-        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-          <div>
-            <h1 className="text-3xl font-oswald font-bold text-amber-500 uppercase tracking-wider">Painel do Barbeiro</h1>
-            <p className="text-slate-400">Total de {appointments.filter(a => a.status === 'pending').length} agendamentos pendentes no sistema.</p>
-          </div>
-          <div className="flex items-center gap-3 bg-slate-800 p-2 rounded-xl border border-slate-700">
-             <label className="text-xs font-bold text-slate-500 uppercase px-2">Agenda de:</label>
-             <input 
-              type="date" 
-              value={filterDate}
-              onChange={(e) => setFilterDate(e.target.value)}
-              className="bg-slate-900 border-none rounded-lg px-3 py-1.5 text-sm outline-none focus:ring-1 ring-amber-500"
-             />
-          </div>
+    <div className="max-w-5xl mx-auto p-6 pb-24">
+      <header className="mb-12 flex flex-col md:flex-row md:items-end justify-between gap-8">
+        <div>
+          <span className="text-gold-500 text-[10px] font-bold tracking-[0.5em] uppercase mb-2 block">Management Console</span>
+          <h1 className="text-5xl font-oswald font-light tracking-tight uppercase leading-none">Painel de <span className="text-gold-500">Comando</span></h1>
+        </div>
+        <div className="flex items-center gap-4 bg-obsidian-800/40 p-1.5 rounded-2xl border border-zinc-800">
+           <span className="text-[9px] font-bold text-zinc-500 uppercase px-4">Agenda:</span>
+           <input 
+            type="date" 
+            value={filterDate}
+            onChange={(e) => setFilterDate(e.target.value)}
+            className="bg-obsidian-900 border-none rounded-xl px-4 py-2 text-xs font-bold outline-none text-gold-500"
+           />
         </div>
       </header>
 
-      {/* Dica da IA */}
-      <div className="bg-slate-800/50 border border-slate-700 rounded-2xl p-6 mb-8 flex items-start gap-4">
-        <div className="bg-amber-500/20 p-3 rounded-xl text-amber-500">
-          <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M13 10V3L4 14h7v7l9-11h-7z" /></svg>
-        </div>
-        <div>
-          <h3 className="text-amber-500 font-bold text-sm uppercase tracking-widest mb-1">Dica do Mestre</h3>
-          <p className="text-slate-300 italic text-sm">"{insight}"</p>
+      {/* Luxury Insight Card */}
+      <div className="relative overflow-hidden rounded-3xl mb-12 group">
+        <div className="absolute inset-0 gold-gradient opacity-10 group-hover:opacity-20 transition-opacity"></div>
+        <div className="relative glass-panel p-8 flex items-center gap-8 border-gold-500/10">
+          <div className="hidden sm:flex h-16 w-16 gold-gradient rounded-2xl items-center justify-center text-obsidian-950 shadow-xl shadow-gold-500/10">
+            <svg className="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.5" d="M13 10V3L4 14h7v7l9-11h-7z" /></svg>
+          </div>
+          <div>
+            <h3 className="text-gold-500 font-bold text-[10px] uppercase tracking-[0.4em] mb-2">Visão Estratégica AI</h3>
+            <p className="text-white text-lg font-light italic leading-relaxed">"{insight}"</p>
+          </div>
         </div>
       </div>
 
-      <div className="space-y-4">
-        <div className="flex justify-between items-center">
-          <h2 className="text-xl font-bold font-oswald uppercase tracking-tight">
-            Horários de {new Date(filterDate + 'T12:00:00').toLocaleDateString('pt-BR')}
+      <div className="space-y-6">
+        <div className="flex justify-between items-end border-b border-zinc-800 pb-4 px-2">
+          <h2 className="text-xl font-oswald font-light tracking-[0.1em] uppercase">
+            {new Date(filterDate + 'T12:00:00').toLocaleDateString('pt-BR', { day: 'numeric', month: 'long' })}
           </h2>
-          <span className="text-xs bg-slate-800 px-3 py-1 rounded-full text-slate-400 border border-slate-700">
-            {filteredAppointments.length} clientes
+          <span className="text-[10px] font-bold text-zinc-600 uppercase tracking-widest bg-zinc-900/50 px-3 py-1 rounded-full border border-zinc-800">
+            {filteredAppointments.length} Serviços
           </span>
         </div>
 
         {filteredAppointments.length === 0 ? (
-          <div className="bg-slate-800/30 border border-dashed border-slate-700 rounded-3xl p-16 text-center">
-            <div className="w-16 h-16 bg-slate-800 rounded-full flex items-center justify-center mx-auto mb-4 text-slate-600">
-              <svg className="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" /></svg>
-            </div>
-            <p className="text-slate-500 font-medium">Nenhum agendamento para este dia.</p>
+          <div className="py-24 text-center">
+            <p className="text-zinc-600 font-light italic uppercase tracking-widest text-sm">Sem agendamentos para este período.</p>
           </div>
         ) : (
-          <div className="grid gap-3">
+          <div className="grid gap-4">
             {filteredAppointments.map(app => (
               <div 
                 key={app.id} 
-                className={`bg-slate-800/80 backdrop-blur-sm border rounded-2xl p-4 transition-all ${
-                  app.status === 'completed' ? 'border-green-500/20 opacity-60' : 
-                  app.status === 'canceled' ? 'border-red-500/20 opacity-40' : 'border-slate-700 hover:border-amber-500/50'
+                className={`group relative overflow-hidden rounded-2xl transition-all duration-300 ${
+                  app.status === 'completed' ? 'opacity-40 grayscale' : 
+                  app.status === 'canceled' ? 'opacity-20 line-through' : 'hover:scale-[1.01]'
                 }`}
               >
-                <div className="flex items-center justify-between gap-4">
-                  <div className="flex items-center gap-4">
-                    <div className="text-xl font-oswald font-bold text-amber-500 w-16">
+                <div className="glass-panel p-6 flex flex-col sm:flex-row items-center justify-between gap-6">
+                  <div className="flex items-center gap-8 w-full sm:w-auto">
+                    <div className="font-oswald text-3xl font-light text-gold-500 tracking-tighter w-20">
                       {app.time}
                     </div>
-                    <div className="h-10 w-[1px] bg-slate-700 hidden sm:block"></div>
+                    <div className="h-12 w-[1px] bg-zinc-800 hidden md:block"></div>
                     <div>
-                      <h4 className="font-bold text-slate-100">{app.clientName}</h4>
-                      <p className="text-xs text-slate-500">{app.clientPhone} • <span className="text-amber-500/80">{app.service}</span></p>
+                      <h4 className="font-oswald text-lg font-medium tracking-wide text-white uppercase">{app.clientName}</h4>
+                      <p className="text-[10px] font-bold text-zinc-500 tracking-widest flex items-center gap-2 mt-1">
+                        {app.clientPhone} <span className="w-1 h-1 bg-zinc-700 rounded-full"></span> 
+                        <span className="text-gold-500/80">{app.service}</span>
+                      </p>
                     </div>
                   </div>
                   
-                  <div className="flex items-center gap-2">
+                  <div className="flex items-center gap-3 w-full sm:w-auto justify-end">
                     {app.status === 'pending' ? (
                       <>
                         <button 
                           onClick={() => onUpdateStatus(app.id, 'canceled')}
-                          className="w-10 h-10 flex items-center justify-center text-red-500 hover:bg-red-500/10 rounded-xl transition-colors"
-                          title="Cancelar"
+                          className="w-12 h-12 flex items-center justify-center text-red-900 hover:text-red-500 hover:bg-red-500/5 rounded-full transition-all border border-transparent hover:border-red-900/30"
                         >
                           <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12" /></svg>
                         </button>
                         <button 
                           onClick={() => onUpdateStatus(app.id, 'completed')}
-                          className="bg-green-500/10 text-green-500 px-4 py-2 rounded-xl text-xs font-bold hover:bg-green-500 hover:text-white transition-all"
+                          className="bg-gold-500/5 text-gold-500 border border-gold-500/30 px-6 py-2.5 rounded-xl text-[10px] font-bold tracking-[0.2em] hover:bg-gold-500 hover:text-obsidian-950 transition-all uppercase"
                         >
-                          CONCLUIR
+                          Finalizar
                         </button>
                       </>
                     ) : (
-                      <span className={`text-[10px] font-black uppercase px-3 py-1 rounded-full ${
-                        app.status === 'completed' ? 'bg-green-500/10 text-green-500' : 'bg-red-500/10 text-red-500'
+                      <span className={`text-[9px] font-black uppercase tracking-[0.3em] px-4 py-1.5 rounded-full border ${
+                        app.status === 'completed' ? 'border-green-900 text-green-700' : 'border-red-900 text-red-900'
                       }`}>
-                        {app.status === 'completed' ? 'Finalizado' : 'Cancelado'}
+                        {app.status === 'completed' ? 'Entregue' : 'Cancelado'}
                       </span>
                     )}
                   </div>

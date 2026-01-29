@@ -26,8 +26,7 @@ const App: React.FC = () => {
 
   useEffect(() => {
     loadData();
-    // Atualiza automaticamente a cada 15 segundos para o barbeiro ver novos agendamentos
-    const interval = setInterval(loadData, 15000);
+    const interval = setInterval(loadData, 20000);
     return () => clearInterval(interval);
   }, []);
 
@@ -36,9 +35,8 @@ const App: React.FC = () => {
     try {
       await storageService.saveAppointment(data);
       await loadData(); 
-      return true; // Sucesso
+      return true;
     } catch (error) {
-      alert("Houve um problema ao salvar seu horário. Tente novamente.");
       console.error(error);
       return false;
     } finally {
@@ -68,12 +66,18 @@ const App: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen flex flex-col bg-slate-900 text-slate-100 pb-16">
+    <div className="min-h-screen flex flex-col bg-obsidian-950 text-slate-200 pb-20">
       {isLoading && appointments.length === 0 && (
-        <div className="fixed inset-0 z-[100] bg-slate-900 flex items-center justify-center">
-          <div className="flex flex-col items-center gap-3">
-            <div className="w-12 h-12 border-4 border-amber-500 border-t-transparent rounded-full animate-spin"></div>
-            <p className="text-amber-500 font-bold text-xs uppercase tracking-widest animate-pulse">Carregando BarberFlow...</p>
+        <div className="fixed inset-0 z-[100] bg-obsidian-950 flex items-center justify-center">
+          <div className="flex flex-col items-center gap-6">
+            <div className="relative">
+              <div className="w-16 h-16 border-2 border-gold-500/20 rounded-full"></div>
+              <div className="w-16 h-16 border-t-2 border-gold-500 rounded-full animate-spin absolute top-0 left-0"></div>
+            </div>
+            <div className="flex flex-col items-center">
+               <span className="font-oswald text-2xl font-light tracking-[0.3em] text-gold-500">BARBERFLOW</span>
+               <span className="text-[10px] font-medium tracking-[0.5em] text-gold-500/50 uppercase mt-1">Premium Grooming</span>
+            </div>
           </div>
         </div>
       )}
@@ -93,28 +97,32 @@ const App: React.FC = () => {
         />
       )}
 
-      <nav className="bg-slate-800/80 backdrop-blur-md sticky top-0 z-50 border-b border-slate-700 px-4 py-3 flex justify-between items-center">
-        <div className="flex items-center gap-2">
-          <div className="w-10 h-10 bg-amber-500 rounded-lg flex items-center justify-center shadow-lg shadow-amber-500/20">
-            <svg className="w-6 h-6 text-slate-900" fill="currentColor" viewBox="0 0 24 24">
-               <path d="M12.67,3.58C11,1.91,8.33,1.91,6.67,3.58S4.99,7.91,6.66,9.58s5-1,5-1L12.67,3.58z M9.67,9.08c-0.83,0-1.5-0.67-1.5-1.5 s0.67-1.5,1.5-1.5s1.5,0.67,1.5,1.5S10.5,9.08,9.67,9.08z M12,14c-2.21,0-4,1.79-4,4v2h8v-2C16,15.79,14.21,14,12,14z"/>
-            </svg>
+      <nav className="bg-obsidian-900/80 backdrop-blur-xl sticky top-0 z-50 border-b border-gold-500/10 px-6 py-4 flex justify-between items-center">
+        <div className="flex items-center gap-3">
+          <div className="w-8 h-8 gold-gradient rounded flex items-center justify-center rotate-45">
+            <div className="-rotate-45">
+              <svg className="w-5 h-5 text-obsidian-950" fill="currentColor" viewBox="0 0 24 24">
+                 <path d="M12,2L4.5,20.29L5.21,21L12,18L18.79,21L19.5,20.29L12,2Z"/>
+              </svg>
+            </div>
           </div>
-          <span className="font-oswald text-xl font-bold tracking-tight uppercase">Barber<span className="text-amber-500">Flow</span></span>
+          <div className="flex flex-col">
+            <span className="font-oswald text-lg font-bold tracking-widest leading-tight">BARBER<span className="text-gold-500 font-light">FLOW</span></span>
+          </div>
         </div>
         
-        <div className="bg-slate-900/50 p-1 rounded-full flex border border-slate-700">
+        <div className="bg-obsidian-950 p-1 rounded-xl flex border border-white/5">
           <button 
             onClick={() => handleRoleChange('client')}
-            className={`px-4 py-1.5 rounded-full text-[10px] font-black tracking-widest transition-all ${role === 'client' && !showAuthScreen ? 'bg-amber-500 text-slate-900 shadow-lg' : 'text-slate-500 hover:text-white'}`}
+            className={`px-4 py-1.5 rounded-lg text-[9px] font-bold tracking-[0.2em] transition-all uppercase ${role === 'client' && !showAuthScreen ? 'bg-gold-500 text-obsidian-900' : 'text-zinc-500'}`}
           >
-            CLIENTE
+            Cliente
           </button>
           <button 
             onClick={() => handleRoleChange('barber')}
-            className={`px-4 py-1.5 rounded-full text-[10px] font-black tracking-widest transition-all ${role === 'barber' || showAuthScreen ? 'bg-amber-500 text-slate-900 shadow-lg' : 'text-slate-500 hover:text-white'}`}
+            className={`px-4 py-1.5 rounded-lg text-[9px] font-bold tracking-[0.2em] transition-all uppercase ${role === 'barber' || showAuthScreen ? 'bg-gold-500 text-obsidian-900' : 'text-zinc-500'}`}
           >
-            BARBEIRO
+            Barbeiro
           </button>
         </div>
       </nav>
@@ -127,21 +135,21 @@ const App: React.FC = () => {
         )}
       </main>
 
-      {/* Mobile Footer Nav */}
-      <div className="fixed bottom-0 left-0 right-0 bg-slate-800/90 backdrop-blur-md border-t border-slate-700 py-3 px-6 flex justify-around items-center md:hidden z-40">
+      {/* Luxury Footer Nav */}
+      <div className="fixed bottom-0 left-0 right-0 glass-panel border-t border-gold-500/10 py-4 px-10 flex justify-around items-center md:hidden z-40">
         <button 
-          className={`flex flex-col items-center gap-1 transition-colors ${role === 'client' && !showAuthScreen ? 'text-amber-500' : 'text-slate-500'}`} 
+          className={`flex flex-col items-center gap-1 transition-all ${role === 'client' && !showAuthScreen ? 'text-gold-500 scale-110' : 'text-zinc-600'}`} 
           onClick={() => handleRoleChange('client')}
         >
-          <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" /></svg>
-          <span className="text-[9px] font-black uppercase tracking-tighter">Agendar</span>
+          <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" /></svg>
+          <span className="text-[8px] font-bold uppercase tracking-widest">Reserva</span>
         </button>
         <button 
-          className={`flex flex-col items-center gap-1 transition-colors ${role === 'barber' || showAuthScreen ? 'text-amber-500' : 'text-slate-500'}`} 
+          className={`flex flex-col items-center gap-1 transition-all ${role === 'barber' || showAuthScreen ? 'text-gold-500 scale-110' : 'text-zinc-600'}`} 
           onClick={() => handleRoleChange('barber')}
         >
-          <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" /></svg>
-          <span className="text-[9px] font-black uppercase tracking-tighter">Painel</span>
+          <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" /></svg>
+          <span className="text-[8px] font-bold uppercase tracking-widest">Gestão</span>
         </button>
       </div>
     </div>

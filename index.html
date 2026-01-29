@@ -4,28 +4,51 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <meta name="theme-color" content="#0f172a">
+    <meta name="theme-color" content="#0a0a0b">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-    <title>BarberFlow Pro</title>
+    <title>BarberFlow Pro | Premium Grooming</title>
     <script>
         window.process = window.process || { env: {} };
     </script>
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Oswald:wght@400;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&family=Oswald:wght@300;500;700&display=swap" rel="stylesheet">
     <link rel="manifest" href="/manifest.json">
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        gold: {
+                            400: '#d4b37d',
+                            500: '#c5a059',
+                            600: '#a68546',
+                        },
+                        obsidian: {
+                            800: '#1a1a1c',
+                            900: '#0a0a0b',
+                            950: '#050505',
+                        }
+                    }
+                }
+            }
+        }
+    </script>
     <style>
         body {
             font-family: 'Inter', sans-serif;
-            background-color: #0f172a;
+            background-color: #0a0a0b;
             margin: 0;
             padding: 0;
             -webkit-font-smoothing: antialiased;
+            color: #e5e5e5;
         }
         .font-oswald {
             font-family: 'Oswald', sans-serif;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
         }
         #root {
             min-height: 100vh;
@@ -33,9 +56,13 @@
         .scrollbar-hide::-webkit-scrollbar {
             display: none;
         }
-        .scrollbar-hide {
-            -ms-overflow-style: none;
-            scrollbar-width: none;
+        .gold-gradient {
+            background: linear-gradient(135deg, #d4b37d 0%, #c5a059 50%, #a68546 100%);
+        }
+        .glass-panel {
+            background: rgba(26, 26, 28, 0.7);
+            backdrop-filter: blur(12px);
+            border: 1px solid rgba(197, 160, 89, 0.1);
         }
     </style>
 <script type="importmap">
@@ -52,7 +79,7 @@
 }
 </script>
 </head>
-<body class="text-slate-100">
+<body>
     <div id="root"></div>
     <script type="module" src="index.tsx"></script>
 </body>
